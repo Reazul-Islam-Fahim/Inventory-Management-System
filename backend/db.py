@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 
-engine = create_async_engine("postgresql+asyncpg://postgres:password@192.168.0.100:5432/inventory", echo=True)
+engine = create_async_engine("postgresql+asyncpg://postgres:password@localhost/postgres", echo=True)
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
