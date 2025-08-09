@@ -1,18 +1,22 @@
-export interface Product {
-  id: number;
+export interface ProductCreate {
   name: string;
   description: string;
   meta_title: string;
   meta_description: string;
-  slug: string;
   price: number;
-  payable_price: number;
   discount_type: "percentage" | "fixed";
   discount_amount: number;
-  total_stock: number;
   available_stock: number;
-  quantity_sold: number;
   is_active: boolean;
+  // Other fields that are truly required for creation
+}
+
+export interface Product extends ProductCreate {
+  id: number;
+  slug: string;
+  payable_price: number;
+  total_stock: number;
+  quantity_sold: number;
   created_at: string;
   updated_at: string;
 }
