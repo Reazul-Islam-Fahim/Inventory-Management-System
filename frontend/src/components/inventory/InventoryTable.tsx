@@ -1,35 +1,17 @@
-import { InventoryType, Product } from "@/types";
+import { Inventory } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 
-interface ProductTableProps {
-  products: Product[];
-  onEdit?: (product: Product) => void;
-  onView?: (product: Product) => void;
-  onDelete?: (product: Product) => void;
+interface InventoryTableProps {
+  inventory: Inventory[];
+  onEdit?: (item: Inventory) => void;
+  onDelete?: (item: Inventory) => void;
 }
 
-export const ProductTable = ({ products, onEdit, onView, onDelete }: ProductTableProps) => {
-  const getStatusBadge = (stock: number) => {
-    if (stock === 0) {
-      return <Badge variant="destructive">Out of Stock</Badge>;
-    } else if (stock < 10) {
-      return <Badge variant="secondary" className="bg-warning text-warning-foreground">
-        Low Stock ({stock})
-      </Badge>;
-    } else {
-      return <Badge variant="default" className="bg-success text-success-foreground">
-        In Stock ({stock})
-      </Badge>;
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
+export const InventoryTable = ({ inventory, onEdit, onDelete }: InventoryTableProps) => {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
 
   return (
@@ -41,13 +23,16 @@ export const ProductTable = ({ products, onEdit, onView, onDelete }: ProductTabl
               Product
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Price
+              Type
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Stock
+              Quantity
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
+              Unit Price
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Date
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
@@ -55,39 +40,33 @@ export const ProductTable = ({ products, onEdit, onView, onDelete }: ProductTabl
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {products.map((product) => (
-            <tr key={product.id} className="hover:bg-gray-50">
+          {inventory.map((item) => (
+            <tr key={item.id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                    <div className="text-sm text-gray-500">{product.slug}</div>
-                  </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {item.product?.name}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {formatPrice(product.price)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {product.available_stock}
-              </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {getStatusBadge(product.available_stock)}
+                <Badge variant={item.inventory_type === "purchase" ? "default" : "secondary"}>
+                  {item.inventory_type}
+                </Badge>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {item.quantity}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${item.unit_price}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {formatDate(item.created_at)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div className="flex space-x-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onView?.(product)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit?.(product)}
+                    onClick={() => onEdit?.(item)}
                     className="h-8 w-8 p-0"
                   >
                     <Edit className="h-4 w-4" />
@@ -95,7 +74,7 @@ export const ProductTable = ({ products, onEdit, onView, onDelete }: ProductTabl
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onDelete?.(product)}
+                    onClick={() => onDelete?.(item)}
                     className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
