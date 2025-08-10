@@ -42,7 +42,7 @@ export const InventoryForm = ({
         setLoadingProducts(true);
         const productsData = await productApi.getAll({ 
           page: 1, 
-          limit: 0 // 0 means unlimited
+          limit: 1000
         });
         setProducts(Array.isArray(productsData) ? productsData : []);
         setError(null);
