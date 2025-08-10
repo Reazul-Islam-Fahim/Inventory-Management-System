@@ -12,8 +12,9 @@ import type { Product, Inventory, ProductCreate } from "@/types";
 import { InventoryForm } from "@/components/inventory/InventoryForm";
 import { ProductFormModal } from "@/components/products/ProductFormModal";
 
-
 export default function Dashboard() {
+  const [refreshSignal, setRefreshSignal] = useState(0);
+
   // Products state and hooks
   const {
     data: productsData,
@@ -80,7 +81,6 @@ export default function Dashboard() {
     };
   }, [productsData, inventoryData, productsLoading, inventoryLoading, productsError, inventoryError]);
 
-
   const handleProductSubmit = async (data: ProductCreate) => {
     try {
       if (productFormState.product?.id) {
@@ -95,7 +95,6 @@ export default function Dashboard() {
       toast({ title: "Error", description: "Failed to save product", variant: "destructive" });
     }
   };
-
 
   const handleInventorySubmit = async (data: Partial<Inventory>) => {
     try {
@@ -116,6 +115,7 @@ export default function Dashboard() {
         });
       }
       setInventoryFormState({ show: false, inventory: null });
+      setRefreshSignal(prev => prev + 1);
     } catch (error) {
       toast({
         title: "Error",
@@ -132,6 +132,7 @@ export default function Dashboard() {
         title: "Success",
         description: "Inventory deleted successfully",
       });
+      setRefreshSignal(prev => prev + 1);
     } catch (error) {
       toast({
         title: "Error",
@@ -220,9 +221,10 @@ export default function Dashboard() {
             </div>
           ) : (
             <InventoryTable
-              inventory={Array.isArray(inventoryData?.data) ? inventoryData.data : []}
+              inventory={Array.isArray(inventoryData?.data?.data) ? inventoryData.data.data : []}
               onEdit={(item) => setInventoryFormState({ show: true, inventory: item })}
               onDelete={handleDeleteInventory}
+              refreshSignal={refreshSignal}
             />
           )}
         </div>
