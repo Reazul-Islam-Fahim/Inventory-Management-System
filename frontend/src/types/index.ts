@@ -8,7 +8,6 @@ export interface ProductCreate {
   discount_amount: number;
   available_stock: number;
   is_active: boolean;
-  // Other fields that are truly required for creation
 }
 
 export interface Product extends ProductCreate {

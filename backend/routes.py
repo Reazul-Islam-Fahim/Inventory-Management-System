@@ -43,53 +43,18 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("/product")
 async def create_product_endpoint(
-    name: str = Form(...),
-    description: Optional[str] = Form(None),
-    meta_title: Optional[str] = Form(None),
-    meta_description: Optional[str] = Form(None),
-    price: float = Form(...),
-    discount_type: discount = Form(...),
-    discount_amount: Optional[float] = Form(None),
-    is_active: bool = Form(True),
+    product_data: ProductsSchema,
     db: AsyncSession = Depends(get_db),
 ):
-    product_data = ProductsSchema(
-        name=name,
-        description=description,
-        meta_title=meta_title,
-        meta_description=meta_description,
-        price=price,
-        discount_type=discount_type,
-        discount_amount=discount_amount,
-        is_active=is_active,
-    )
     return await create_product(db, product_data)
 
 
 @router.put("/product/{product_id}")
 async def update_product_endpoint(
     product_id: int,
-    name: str = Form(...),
-    description: Optional[str] = Form(None),
-    meta_title: Optional[str] = Form(None),
-    meta_description: Optional[str] = Form(None),
-    price: float = Form(...),
-    discount_type: discount = Form(...),
-    discount_amount: Optional[float] = Form(None),
-    is_active: bool = Form(True),
+    product_data: ProductsSchema,
     db: AsyncSession = Depends(get_db),
 ):
-    product_data = ProductsSchema(
-        name=name,
-        description=description,
-        meta_title=meta_title,
-        meta_description=meta_description,
-        price=price,
-        discount_type=discount_type,
-        discount_amount=discount_amount,
-        is_active=is_active,
-    )
-
     return await update_product_by_id(db, product_id, product_data)
 
 

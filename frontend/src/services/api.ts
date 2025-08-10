@@ -11,10 +11,13 @@ const api = axios.create({
 
 // Products API
 export const productApi = {
-  getAll: (params: any) => api.get('/product', { params }),
-  getById: (id: number) => api.get(`/product/${id}`),
-  create: (data: any) => api.post('/product', data),
-  update: (id: number, data: any) => api.put(`/product/${id}`, data),
+  getAll: async (params?: any) => {
+    const res = await api.get('/product', { params });
+    return res.data.data; // ✅ unwrap data here
+  },
+  getById: (id: number) => api.get(`/product/${id}`).then(res => res.data),
+  create: (data: any) => api.post('/product', data).then(res => res.data),
+  update: (id: number, data: any) => api.put(`/product/${id}`, data).then(res => res.data),
 };
 
 // Inventory API
