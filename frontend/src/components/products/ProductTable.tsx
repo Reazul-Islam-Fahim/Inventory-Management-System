@@ -1,22 +1,19 @@
 import { InventoryType, Product } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Trash2 } from "lucide-react";
+import { Edit } from "lucide-react";
 
 interface ProductTableProps {
   products: {
     data: Product[];
-    meta?: any; // You can define proper type for meta if needed
-  } | Product[]; // Support both direct array and nested data structure
+    meta?: any;
+  } | Product[];
   onEdit?: (product: Product) => void;
-  onView?: (product: Product) => void;
-  onDelete?: (product: Product) => void;
 }
 
-export const ProductTable = ({ products, onEdit, onView, onDelete }: ProductTableProps) => {
-  // Normalize the products data structure
+export const ProductTable = ({ products, onEdit }: ProductTableProps) => {
   const productList = Array.isArray(products) ? products : products?.data || [];
-  
+
   const getStatusBadge = (stock: number) => {
     if (stock === 0) return <Badge variant="destructive">Out of Stock</Badge>;
     if (stock < 10) return <Badge variant="secondary" className="bg-warning text-warning-foreground">Low Stock ({stock})</Badge>;
@@ -24,16 +21,40 @@ export const ProductTable = ({ products, onEdit, onView, onDelete }: ProductTabl
   };
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'BDT' }).format(price);
+
+  const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString) return "-";
+    const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
-        {/* header */}
+        <thead className="bg-gray-200">
+          <tr>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Product</th>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Price</th>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Discount Amount</th>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Price After Discount</th>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+
         <tbody className="bg-white divide-y divide-gray-200">
           {productList.length === 0 ? (
             <tr>
-              <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+              <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                 No products found
               </td>
             </tr>
@@ -42,27 +63,28 @@ export const ProductTable = ({ products, onEdit, onView, onDelete }: ProductTabl
               <tr key={product.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                  <div className="text-sm text-gray-500">{product.slug}</div>
+                  <div className="text-sm text-gray-500">{product.description}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatPrice(product.price)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                  { product.discount_type === "percentage" ? `${product.discount_amount}%` : formatPrice(product.discount_amount)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatPrice(product.payable_price)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {product.available_stock}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(product.available_stock)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(product.updated_at)}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <Button variant="ghost" size="sm" onClick={() => onView?.(product)} className="h-8 w-8 p-0">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onEdit?.(product)} className="h-8 w-8 p-0">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onDelete?.(product)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => onEdit?.(product)} className="h-8 w-8 p-0">
+                    <Edit className="h-4 w-4" />
+                  </Button>
                 </td>
               </tr>
             ))
