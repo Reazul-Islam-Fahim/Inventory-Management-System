@@ -13,7 +13,7 @@ const api = axios.create({
 export const productApi = {
   getAll: async (params?: any) => {
     const res = await api.get('/product', { params });
-    return res.data.data; // ✅ unwrap data here
+    return res.data.data; 
   },
   getById: (id: number) => api.get(`/product/${id}`).then(res => res.data),
   create: (data: any) => api.post('/product', data).then(res => res.data),

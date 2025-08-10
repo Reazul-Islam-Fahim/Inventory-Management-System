@@ -244,7 +244,6 @@ export default function Dashboard() {
       {inventoryFormState.show && (
         <InventoryForm
           inventory={inventoryFormState.inventory}
-          products={Array.isArray(productsData?.data) ? productsData.data : []}
           onSave={handleInventorySubmit}
           onCancel={() => setInventoryFormState({ show: false, inventory: null })}
         />

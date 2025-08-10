@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,17 +11,16 @@ import {
 } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { Inventory, InventoryType, Product } from "@/types";
+import { productApi } from "@/services/api";
 
 interface InventoryFormProps {
   inventory?: Inventory | null;
-  products: Product[];
   onSave: (inventory: Partial<Inventory>) => void;
   onCancel: () => void;
 }
 
 export const InventoryForm = ({
   inventory,
-  products,
   onSave,
   onCancel,
 }: InventoryFormProps) => {
@@ -33,20 +32,45 @@ export const InventoryForm = ({
     notes: inventory?.notes || "",
   });
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const productsData = await productApi.getAll({ 
+          page: 1, 
+          limit: 0 // 0 means unlimited
+        });
+        setProducts(Array.isArray(productsData) ? productsData : []);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+        setError("Failed to load products. Please try again.");
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.product_id) return; // validation: require product selection
+    
+    if (!formData.product_id) {
+      setError("Please select a product");
+      return;
+    }
 
     const payload: Partial<Inventory> = {
       ...formData,
       total_quantity: formData.quantity,
+      is_active: true,
     };
-    delete payload.quantity;
-
-    // Add any other API required fields here, e.g. is_active if needed:
-    if (payload.is_active === undefined) {
-      payload.is_active = true;
-    }
 
     onSave(payload);
   };
@@ -58,105 +82,140 @@ export const InventoryForm = ({
           <h2 className="text-xl font-bold">
             {inventory ? "Edit Inventory" : "Add Inventory"}
           </h2>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            aria-label="Close form"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
+
+        {error && (
+          <div className="mb-4 p-2 text-sm text-red-500 bg-red-50 rounded-md">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Product Selection */}
           <div>
-            <Label htmlFor="product_id">Product</Label>
-            <Select
-              value={formData.product_id?.toString() || ""}
-              onValueChange={(value) =>
-                setFormData({ ...formData, product_id: parseInt(value, 10) })
-              }
-              defaultValue={formData.product_id?.toString()}
-              aria-label="Select product"
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select product" />
-              </SelectTrigger>
-              <SelectContent>
-                {products.map((product) => (
-                  <SelectItem key={product.id} value={product.id.toString()}>
-                    {product.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="product_id">Product *</Label>
+            {loadingProducts ? (
+              <div className="p-2 text-sm text-gray-500">Loading products...</div>
+            ) : products.length === 0 ? (
+              <div className="text-sm text-red-500 p-2 bg-red-50 rounded-md">
+                No products available. Please add products first.
+              </div>
+            ) : (
+              <Select
+                value={formData.product_id?.toString() || ""}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, product_id: parseInt(value, 10) });
+                  setError(null);
+                }}
+                required
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {products.map((product) => (
+                    <SelectItem
+                      key={product.id}
+                      value={product.id.toString()}
+                      className="hover:bg-gray-100"
+                    >
+                      {product.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
+          {/* Inventory Type */}
           <div>
-            <Label htmlFor="inventory_type">Type</Label>
+            <Label htmlFor="inventory_type">Type *</Label>
             <Select
               value={formData.inventory_type}
               onValueChange={(value) =>
-                setFormData({
-                  ...formData,
-                  inventory_type: value as InventoryType,
-                })
+                setFormData({ ...formData, inventory_type: value as InventoryType })
               }
-              aria-label="Select inventory type"
+              required
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="purchase">Purchase</SelectItem>
-                <SelectItem value="sale">Sale</SelectItem>
+                <SelectItem value="purchase" className="hover:bg-gray-100">
+                  Purchase
+                </SelectItem>
+                <SelectItem value="sale" className="hover:bg-gray-100">
+                  Sale
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {/* Quantity and Unit Price */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity">Quantity *</Label>
               <Input
                 id="quantity"
                 type="number"
-                min={0}
+                min={1}
                 value={formData.quantity}
                 onChange={(e) =>
-                  setFormData({ ...formData, quantity: parseInt(e.target.value) })
+                  setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })
                 }
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="unit_price">Unit Price</Label>
+              <Label htmlFor="unit_price">Unit Price *</Label>
               <Input
                 id="unit_price"
                 type="number"
-                min={0}
+                min={0.01}
                 step="0.01"
                 value={formData.unit_price}
                 onChange={(e) =>
-                  setFormData({ ...formData, unit_price: parseFloat(e.target.value) })
+                  setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })
                 }
                 required
               />
             </div>
           </div>
 
+          {/* Notes */}
           <div>
             <Label htmlFor="notes">Notes</Label>
             <Input
               id="notes"
-              value={formData.notes}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
+              value={formData.notes || ""}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Optional notes"
             />
           </div>
 
+          {/* Form Actions */}
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="submit" disabled={!formData.product_id}>
-              {inventory ? "Update Inventory" : "Add Inventory"}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+            >
               Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!formData.product_id || !formData.quantity || !formData.unit_price}
+            >
+              {inventory ? "Update Inventory" : "Add Inventory"}
             </Button>
           </div>
         </form>
