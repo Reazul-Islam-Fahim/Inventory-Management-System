@@ -13,6 +13,7 @@ interface Meta {
 }
 
 interface ProductTableProps {
+  products: Product[];
   onEdit?: (product: Product) => void;
 }
 

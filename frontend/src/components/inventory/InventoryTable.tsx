@@ -30,7 +30,6 @@ export const InventoryTable = ({
   const [internalInventory, setInternalInventory] = useState<Inventory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [meta, setMeta] = useState<Meta | undefined>(undefined);
@@ -39,31 +38,28 @@ export const InventoryTable = ({
   const inventory = propInventory ?? internalInventory;
   const productsList = propProducts ?? products;
 
-  // Map product_id → Product for quick lookup
+  // Map product_id → Product
   const productMap = useMemo(() => {
     const map = new Map<number, Product>();
-    if (Array.isArray(productsList)) productsList.forEach((p) => map.set(p.id, p));
+    productsList.forEach((p) => map.set(p.id, p));
     return map;
   }, [productsList]);
 
-  // Fetch inventory & products
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
 
+      // Fetch inventory only if propInventory not provided
       if (!propInventory) {
         const res = await inventoryApi.getAll({ page, limit });
-        const inventoryData = Array.isArray(res.data?.data) ? res.data.data : [];
-        setInternalInventory(inventoryData);
+        setInternalInventory(Array.isArray(res.data?.data) ? res.data.data : []);
         if (res.data?.meta) setMeta(res.data.meta);
       }
 
+      // Fetch products only if propProducts not provided
       if (!propProducts) {
         const productsRes = await productApi.getAll({ page: 1, limit: 1000 });
-        const productsArray = Array.isArray(productsRes?.data?.data)
-          ? productsRes.data.data
-          : [];
-        setProducts(productsArray);
+        setProducts(Array.isArray(productsRes.data?.data) ? productsRes.data.data : []);
       }
 
     } catch (error) {
@@ -79,14 +75,14 @@ export const InventoryTable = ({
     fetchData();
   }, [fetchData, refreshSignal]);
 
-  const formatDate = (dateString: string | undefined) =>
+  const formatDate = (dateString?: string) =>
     dateString ? new Date(dateString).toLocaleDateString() : "-";
 
   if (loading) return <div>Loading inventory...</div>;
   if (inventory.length === 0)
     return <div className="text-center p-4">No inventory records found.</div>;
 
-  // Numeric pagination with ellipsis
+  // Pagination numbers
   const getPageNumbers = () => {
     if (!meta) return [];
     const totalPages = meta.pages;
@@ -140,29 +136,17 @@ export const InventoryTable = ({
         </div>
       </div>
 
-      {/* Inventory table */}
+      {/* Inventory Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-                Product
-              </th>
-              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-                Quantity
-              </th>
-              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-                Unit Price
-              </th>
-              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-                Actions
-              </th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">Product</th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">Type</th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">Quantity</th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">Unit Price</th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">Date</th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -183,34 +167,20 @@ export const InventoryTable = ({
                       {item.inventory_type}
                     </Badge>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.quantity}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Intl.NumberFormat("en-US", {
                       style: "currency",
                       currency: "BDT",
                     }).format(item.unit_price)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(item.created_at)}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(item.created_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit?.(item)}
-                        className="h-8 w-8 p-0"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => onEdit?.(item)} className="h-8 w-8 p-0">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete?.(item)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => onDelete?.(item)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
