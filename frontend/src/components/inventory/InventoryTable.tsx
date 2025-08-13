@@ -5,8 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { inventoryApi, productApi } from "@/services/api";
 
+interface Meta {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
 interface InventoryTableProps {
-  inventory?: Inventory[]; // Optional inventory from props
+  inventory?: Inventory[];
+  products?: Product[];
   onEdit?: (item: Inventory) => void;
   onDelete?: (item: Inventory) => void;
   refreshSignal?: number;
@@ -14,6 +22,7 @@ interface InventoryTableProps {
 
 export const InventoryTable = ({
   inventory: propInventory,
+  products: propProducts,
   onEdit,
   onDelete,
   refreshSignal,
@@ -22,133 +31,202 @@ export const InventoryTable = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Use prop inventory if provided, otherwise use state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [meta, setMeta] = useState<Meta | undefined>(undefined);
+
+  // Use props if provided, otherwise internal state
   const inventory = propInventory ?? internalInventory;
+  const productsList = propProducts ?? products;
 
   // Map product_id → Product for quick lookup
   const productMap = useMemo(() => {
     const map = new Map<number, Product>();
-    products.forEach((p) => map.set(p.id, p));
+    if (Array.isArray(productsList)) productsList.forEach((p) => map.set(p.id, p));
     return map;
-  }, [products]);
+  }, [productsList]);
 
   // Fetch inventory & products
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Only fetch inventory if not provided via props
-      if (propInventory === undefined) {
-        const inventoryRes = await inventoryApi.getAll({ page: 1, limit: 20 });
-        const inventoryData = Array.isArray(inventoryRes?.data?.data)
-          ? inventoryRes.data.data
-          : [];
+      if (!propInventory) {
+        const res = await inventoryApi.getAll({ page, limit });
+        const inventoryData = Array.isArray(res.data?.data) ? res.data.data : [];
         setInternalInventory(inventoryData);
+        if (res.data?.meta) setMeta(res.data.meta);
       }
 
-      const productsData = await productApi.getAll();
-      setProducts(productsData);
+      if (!propProducts) {
+        const productsRes = await productApi.getAll({ page: 1, limit: 1000 });
+        const productsArray = Array.isArray(productsRes?.data?.data)
+          ? productsRes.data.data
+          : [];
+        setProducts(productsArray);
+      }
+
     } catch (error) {
       console.error("Failed to load inventory or products", error);
-      setInternalInventory([]);
+      if (!propInventory) setInternalInventory([]);
+      if (!propProducts) setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, [propInventory]);
+  }, [propInventory, propProducts, page, limit]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData, refreshSignal]);
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString();
+  const formatDate = (dateString: string | undefined) =>
+    dateString ? new Date(dateString).toLocaleDateString() : "-";
 
   if (loading) return <div>Loading inventory...</div>;
   if (inventory.length === 0)
     return <div className="text-center p-4">No inventory records found.</div>;
 
+  // Numeric pagination with ellipsis
+  const getPageNumbers = () => {
+    if (!meta) return [];
+    const totalPages = meta.pages;
+    const current = page;
+    const delta = 2;
+    const pages: (number | string)[] = [];
+
+    const left = Math.max(2, current - delta);
+    const right = Math.min(totalPages - 1, current + delta);
+
+    pages.push(1);
+    if (left > 2) pages.push("…");
+
+    for (let i = left; i <= right; i++) pages.push(i);
+
+    if (right < totalPages - 1) pages.push("…");
+    if (totalPages > 1) pages.push(totalPages);
+
+    return pages;
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-              Product
-            </th>
-            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-              Type
-            </th>
-            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-              Quantity
-            </th>
-            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-              Unit Price
-            </th>
-            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-              Date
-            </th>
-            <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {inventory.map((item) => {
-            const product = productMap.get(item.product_id);
-            return (
-              <tr key={item.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm font-medium text-gray-900">
-                    {product ? product.name : `Product ID ${item.product_id}`}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Badge
-                    variant={
-                      item.inventory_type === "purchase" ? "default" : "secondary"
-                    }
-                    className="capitalize"
-                  >
-                    {item.inventory_type}
-                  </Badge>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.quantity}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "BDT",
-                  }).format(item.unit_price)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(item.created_at)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit?.(item)}
-                      className="h-8 w-8 p-0"
+    <div>
+      {/* Pagination controls */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <label className="mr-2">Items per page:</label>
+          <select
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value))}
+            className="border rounded px-2 py-1"
+          >
+            {[5, 10, 20, 50].map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center space-x-1">
+          {getPageNumbers().map((num, idx) => (
+            <button
+              key={idx}
+              onClick={() => typeof num === "number" && setPage(num)}
+              className={`px-3 py-1 border rounded ${
+                num === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+              }`}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Inventory table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
+                Product
+              </th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
+                Type
+              </th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
+                Quantity
+              </th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
+                Unit Price
+              </th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {inventory.map((item) => {
+              const product = productMap.get(item.product_id);
+              return (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm font-medium text-gray-900">
+                      {product ? product.name : `Product ID ${item.product_id}`}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Badge
+                      variant={item.inventory_type === "purchase" ? "default" : "secondary"}
+                      className="capitalize"
                     >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete?.(item)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                      {item.inventory_type}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {item.quantity}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "BDT",
+                    }).format(item.unit_price)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(item.created_at)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit?.(item)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete?.(item)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {meta && (
+        <div className="mt-2 text-sm text-gray-500">
+          Showing page {meta.page} of {meta.pages} — Total items: {meta.total}
+        </div>
+      )}
     </div>
   );
 };

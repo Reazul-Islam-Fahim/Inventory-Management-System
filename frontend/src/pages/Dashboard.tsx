@@ -196,7 +196,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <ProductTable
-              products={productsData || { data: [] }}
+              // products={productsData || { data: [] }}
               onEdit={(product) => setProductFormState({ show: true, product })}
             />
           )}

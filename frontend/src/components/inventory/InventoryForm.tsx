@@ -36,27 +36,24 @@ export const InventoryForm = ({
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoadingProducts(true);
-        const productsData = await productApi.getAll({ 
-          page: 1, 
-          limit: 1000
-        });
-        setProducts(Array.isArray(productsData) ? productsData : []);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        setError("Failed to load products. Please try again.");
-        setProducts([]);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      const productsData = await productApi.getAll({ page: 1, limit: 1000 });
+      setProducts(Array.isArray(productsData?.data) ? productsData.data : []);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+      setError("Failed to load products. Please try again.");
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
-    fetchProducts();
-  }, []);
+  fetchProducts();
+}, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,9 +11,9 @@ const api = axios.create({
 
 // Products API
 export const productApi = {
-  getAll: async (params?: any) => {
+  getAll: async (params?: { page?: number; limit?: number }) => {
     const res = await api.get('/product', { params });
-    return res.data.data; 
+    return res.data; 
   },
   getById: (id: number) => api.get(`/product/${id}`).then(res => res.data),
   create: (data: any) => api.post('/product', data).then(res => res.data),
