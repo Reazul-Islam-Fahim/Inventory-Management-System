@@ -61,7 +61,6 @@ export const InventoryTable = ({
         const productsRes = await productApi.getAll({ page: 1, limit: 1000 });
         setProducts(Array.isArray(productsRes.data?.data) ? productsRes.data.data : []);
       }
-
     } catch (error) {
       console.error("Failed to load inventory or products", error);
       if (!propInventory) setInternalInventory([]);
@@ -73,36 +72,17 @@ export const InventoryTable = ({
 
   useEffect(() => {
     fetchData();
-  }, [fetchData, refreshSignal]);
+  }, [fetchData, page, limit, refreshSignal]);
 
   const formatDate = (dateString?: string) =>
     dateString ? new Date(dateString).toLocaleDateString() : "-";
 
   if (loading) return <div>Loading inventory...</div>;
   if (inventory.length === 0)
-    return <div className="text-center p-4">No inventory records found.</div>;
+    return <div className="text-center p-4 text-gray-500">No inventory records found.</div>;
 
-  // Pagination numbers
-  const getPageNumbers = () => {
-    if (!meta) return [];
-    const totalPages = meta.pages;
-    const current = page;
-    const delta = 2;
-    const pages: (number | string)[] = [];
-
-    const left = Math.max(2, current - delta);
-    const right = Math.min(totalPages - 1, current + delta);
-
-    pages.push(1);
-    if (left > 2) pages.push("…");
-
-    for (let i = left; i <= right; i++) pages.push(i);
-
-    if (right < totalPages - 1) pages.push("…");
-    if (totalPages > 1) pages.push(totalPages);
-
-    return pages;
-  };
+  // Pagination numbers (numeric pages like ProductTable)
+  const pageNumbers = meta ? Array.from({ length: meta.pages }, (_, i) => i + 1) : [];
 
   return (
     <div>
@@ -116,16 +96,18 @@ export const InventoryTable = ({
             className="border rounded px-2 py-1"
           >
             {[5, 10, 20, 50].map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="flex items-center space-x-1">
-          {getPageNumbers().map((num, idx) => (
+          {pageNumbers.map((num) => (
             <button
-              key={idx}
-              onClick={() => typeof num === "number" && setPage(num)}
+              key={num}
+              onClick={() => setPage(num)}
               className={`px-3 py-1 border rounded ${
                 num === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
               }`}
@@ -180,7 +162,12 @@ export const InventoryTable = ({
                       <Button variant="ghost" size="sm" onClick={() => onEdit?.(item)} className="h-8 w-8 p-0">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => onDelete?.(item)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete?.(item)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -192,6 +179,7 @@ export const InventoryTable = ({
         </table>
       </div>
 
+      {/* Pagination info */}
       {meta && (
         <div className="mt-2 text-sm text-gray-500">
           Showing page {meta.page} of {meta.pages} — Total items: {meta.total}
