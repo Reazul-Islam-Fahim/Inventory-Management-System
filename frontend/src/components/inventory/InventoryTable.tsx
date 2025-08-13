@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Inventory, Product } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,43 +6,46 @@ import { Edit, Trash2 } from "lucide-react";
 import { inventoryApi, productApi } from "@/services/api";
 
 interface InventoryTableProps {
-  inventory?: Inventory[]; // Make it optional
+  inventory?: Inventory[]; // Optional inventory from props
   onEdit?: (item: Inventory) => void;
   onDelete?: (item: Inventory) => void;
   refreshSignal?: number;
 }
 
-export const InventoryTable = ({ 
-  inventory: propInventory, 
-  onEdit, 
-  onDelete, 
-  refreshSignal 
+export const InventoryTable = ({
+  inventory: propInventory,
+  onEdit,
+  onDelete,
+  refreshSignal,
 }: InventoryTableProps) => {
   const [internalInventory, setInternalInventory] = useState<Inventory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Use prop inventory if provided, otherwise use internal state
-  const inventory = propInventory !== undefined ? propInventory : internalInventory;
+  // Use prop inventory if provided, otherwise use state
+  const inventory = propInventory ?? internalInventory;
 
-  const productMap = React.useMemo(() => {
+  // Map product_id → Product for quick lookup
+  const productMap = useMemo(() => {
     const map = new Map<number, Product>();
     products.forEach((p) => map.set(p.id, p));
     return map;
   }, [products]);
 
-  const fetchData = async () => {
+  // Fetch inventory & products
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+
       // Only fetch inventory if not provided via props
       if (propInventory === undefined) {
         const inventoryRes = await inventoryApi.getAll({ page: 1, limit: 20 });
-        // Handle the API response structure correctly
-        const inventoryData = Array.isArray(inventoryRes?.data?.data) 
-          ? inventoryRes.data.data 
+        const inventoryData = Array.isArray(inventoryRes?.data?.data)
+          ? inventoryRes.data.data
           : [];
         setInternalInventory(inventoryData);
       }
+
       const productsData = await productApi.getAll();
       setProducts(productsData);
     } catch (error) {
@@ -51,11 +54,11 @@ export const InventoryTable = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [propInventory]);
 
   useEffect(() => {
     fetchData();
-  }, [refreshSignal, propInventory]);
+  }, [fetchData, refreshSignal]);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString();
@@ -101,7 +104,9 @@ export const InventoryTable = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Badge
-                    variant={item.inventory_type === "purchase" ? "default" : "secondary"}
+                    variant={
+                      item.inventory_type === "purchase" ? "default" : "secondary"
+                    }
                     className="capitalize"
                   >
                     {item.inventory_type}
