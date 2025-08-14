@@ -22,7 +22,10 @@ export const productApi = {
 
 // Inventory API
 export const inventoryApi = {
-  getAll: (params: any) => api.get('/inventory', { params }),
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const res = await api.get('/inventory', { params });
+    return res.data; 
+  },
   getById: (id: number) => api.get(`/inventory/${id}`),
   create: (data: any) => api.post('/inventory', data),
   update: (id: number, data: any) => api.put(`/inventory/${id}`, data),

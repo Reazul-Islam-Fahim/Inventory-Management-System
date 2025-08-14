@@ -36,3 +36,10 @@ export interface Inventory {
   product_id: number;
   product?: Product;
 }
+
+export interface Meta {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}

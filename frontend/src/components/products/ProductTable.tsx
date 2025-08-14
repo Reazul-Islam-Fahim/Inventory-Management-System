@@ -4,13 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { productApi } from "@/services/api";
-
-interface Meta {
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-}
+import { Meta } from "@/types";
 
 interface ProductTableProps {
   products: Product[];
