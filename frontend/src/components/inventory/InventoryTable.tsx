@@ -7,9 +7,13 @@ import { inventoryApi, productApi } from "@/services/api";
 import { Meta } from "@/types";
 
 interface InventoryTableProps {
+  inventory: Inventory[];
+  products: Product[];
   onEdit?: (item: Inventory) => void;
   onDelete?: (item: Inventory) => void;
+  refreshSignal?: number;
 }
+
 
 export const InventoryTable = ({ onEdit, onDelete }: InventoryTableProps) => {
   const [page, setPage] = useState(1);
