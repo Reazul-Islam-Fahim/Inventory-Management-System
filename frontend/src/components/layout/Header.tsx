@@ -1,4 +1,4 @@
-import { Package, Search, Plus } from "lucide-react";
+import { Package, Search, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -18,8 +18,8 @@ export const Header = ({ onAddProduct, searchQuery, onSearchChange }: HeaderProp
             <Package className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">StockFlow</h1>
-            <p className="text-sm text-muted-foreground">Inventory Management</p>
+            <h1 className="text-xl font-bold text-foreground">Inventory</h1>
+            <p className="text-sm text-muted-foreground">Management System</p>
           </div>
         </div>
 
@@ -35,8 +35,8 @@ export const Header = ({ onAddProduct, searchQuery, onSearchChange }: HeaderProp
             />
           </div>
           <Button onClick={onAddProduct} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Product
+            <LogOut className="h-4 w-4" />
+            Logout
           </Button>
         </div>
       </div>
