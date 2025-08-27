@@ -49,7 +49,7 @@ export default function Dashboard() {
 
     return {
       products: { value: products.length, loading: productsLoading, error: productsError },
-      inventory: { value: inventory.length, loading: inventoryLoading, error: inventoryError },
+      inventory: { value: products.filter(p => (p.available_stock || 0) > 0).length, loading: inventoryLoading, error: inventoryError },
       stock: { value: products.reduce((sum, p) => sum + (p.available_stock || 0), 0), loading: productsLoading, error: productsError },
       sales: { value: inventory.filter(i => i.inventory_type === "sale").length, loading: inventoryLoading, error: inventoryError }
     };
