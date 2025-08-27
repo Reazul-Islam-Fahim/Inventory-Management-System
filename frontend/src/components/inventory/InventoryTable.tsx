@@ -172,7 +172,7 @@ export const InventoryTable = ({ onEdit, onDelete }: InventoryTableProps) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge
-                      variant={item.inventory_type === "purchase" ? "default" : "destructive"}
+                      variant={item.inventory_type === "purchase" ? "default" : "secondary"}
                       className="capitalize"
                     >
                       {item.inventory_type}
