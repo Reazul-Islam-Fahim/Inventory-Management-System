@@ -118,10 +118,10 @@ export default function Dashboard() {
       <div className="p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatsCard title="Total Products" value={stats.products.value.toString()} icon={Package} variant={stats.products.error ? "red" : "blue"} />
-          <StatsCard title="Total Stock" value={stats.stock.value.toString()} icon={ShoppingCart} variant={stats.stock.error ? "red" : "green"} />
-          <StatsCard title="Total Sales" value={stats.sales.value.toString()} icon={DollarSign} variant={stats.sales.error ? "red" : "purple"} />
-          <StatsCard title="Inventory Items" value={stats.inventory.value.toString()} icon={TrendingUp} variant={stats.inventory.error ? "red" : "pink"} />
+          <StatsCard title="Total Products" value={stats.products.value.toString()} icon={Package} variant={stats.products.error ? "destructive" : "primary"} />
+          <StatsCard title="Total Stock" value={stats.stock.value.toString()} icon={ShoppingCart} variant={stats.stock.error ? "destructive" : "info"} />
+          <StatsCard title="Total Sales" value={stats.sales.value.toString()} icon={DollarSign} variant={stats.sales.error ? "destructive" : "success"} />
+          <StatsCard title="Inventory Items" value={stats.inventory.value.toString()} icon={TrendingUp} variant={stats.inventory.error ? "destructive" : "primary"} />
         </div>
 
         {/* Products Section */}

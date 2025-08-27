@@ -9,27 +9,27 @@ interface StatsCardProps {
     value: number;
     isPositive: boolean;
   };
-  variant?: "blue" | "green" | "orange" | "purple" | "red" | "cyan" | "pink" | "indigo";
+  variant?: "primary" | "success" | "warning" | "info" | "destructive" | "secondary" | "accent" | "muted";
 }
 
-export const StatsCard = ({ title, value, icon: Icon, trend, variant = "blue" }: StatsCardProps) => {
+export const StatsCard = ({ title, value, icon: Icon, trend, variant = "primary" }: StatsCardProps) => {
   const getVariantStyles = () => {
     switch (variant) {
-      case "green":
+      case "success":
         return "border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:border-emerald-900/30 dark:from-emerald-900/20 dark:to-emerald-800/20";
-      case "orange":
+      case "warning":
         return "border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100 dark:border-amber-900/30 dark:from-amber-900/20 dark:to-amber-800/20";
-      case "purple":
-        return "border-violet-200 bg-gradient-to-br from-violet-50 to-violet-100 dark:border-violet-900/30 dark:from-violet-900/20 dark:to-violet-800/20";
-      case "red":
-        return "border-rose-200 bg-gradient-to-br from-rose-50 to-rose-100 dark:border-rose-900/30 dark:from-rose-900/20 dark:to-rose-800/20";
-      case "cyan":
+      case "info":
         return "border-cyan-200 bg-gradient-to-br from-cyan-50 to-cyan-100 dark:border-cyan-900/30 dark:from-cyan-900/20 dark:to-cyan-800/20";
-      case "pink":
-        return "border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:border-pink-900/30 dark:from-pink-900/20 dark:to-pink-800/20";
-      case "indigo":
+      case "destructive":
+        return "border-rose-200 bg-gradient-to-br from-rose-50 to-rose-100 dark:border-rose-900/30 dark:from-rose-900/20 dark:to-rose-800/20";
+      case "secondary":
+        return "border-violet-200 bg-gradient-to-br from-violet-50 to-violet-100 dark:border-violet-900/30 dark:from-violet-900/20 dark:to-violet-800/20";
+      case "accent":
         return "border-indigo-200 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:border-indigo-900/30 dark:from-indigo-900/20 dark:to-indigo-800/20";
-      case "blue":
+      case "muted":
+        return "border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:border-pink-900/30 dark:from-pink-900/20 dark:to-pink-800/20";
+      case "primary":
       default:
         return "border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 dark:border-blue-900/30 dark:from-blue-900/20 dark:to-blue-800/20";
     }
@@ -37,50 +37,50 @@ export const StatsCard = ({ title, value, icon: Icon, trend, variant = "blue" }:
 
   const getIconStyles = () => {
     switch (variant) {
-      case "green":
-        return "text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/30";
-      case "orange":
-        return "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30";
-      case "purple":
-        return "text-violet-600 bg-violet-100 dark:text-violet-400 dark:bg-violet-900/30";
-      case "red":
-        return "text-rose-600 bg-rose-100 dark:text-rose-400 dark:bg-rose-900/30";
-      case "cyan":
-        return "text-cyan-600 bg-cyan-100 dark:text-cyan-400 dark:bg-cyan-900/30";
-      case "pink":
-        return "text-pink-600 bg-pink-100 dark:text-pink-400 dark:bg-pink-900/30";
-      case "indigo":
-        return "text-indigo-600 bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-900/30";
-      case "blue":
+      case "success":
+        return "text-success bg-success/10";
+      case "warning":
+        return "text-warning bg-warning/10";
+      case "info":
+        return "text-info bg-info/10";
+      case "destructive":
+        return "text-destructive bg-destructive/10";
+      case "secondary":
+        return "text-secondary bg-secondary/10";
+      case "accent":
+        return "text-accent bg-accent/10";
+      case "muted":
+        return "text-muted-foreground bg-muted/10";
+      case "primary":
       default:
-        return "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30";
+        return "text-primary bg-primary/10";
     }
   };
 
   const getTrendStyles = () => {
     switch (variant) {
-      case "green":
-        return trend?.isPositive ? "text-emerald-600" : "text-rose-600";
-      case "orange":
-        return trend?.isPositive ? "text-amber-600" : "text-rose-600";
-      case "purple":
-        return trend?.isPositive ? "text-violet-600" : "text-rose-600";
-      case "red":
-        return trend?.isPositive ? "text-rose-600" : "text-emerald-600";
-      case "cyan":
-        return trend?.isPositive ? "text-cyan-600" : "text-rose-600";
-      case "pink":
-        return trend?.isPositive ? "text-pink-600" : "text-rose-600";
-      case "indigo":
-        return trend?.isPositive ? "text-indigo-600" : "text-rose-600";
-      case "blue":
+      case "success":
+        return trend?.isPositive ? "text-success" : "text-destructive";
+      case "warning":
+        return trend?.isPositive ? "text-warning" : "text-destructive";
+      case "info":
+        return trend?.isPositive ? "text-info" : "text-destructive";
+      case "destructive":
+        return trend?.isPositive ? "text-destructive" : "text-success";
+      case "secondary":
+        return trend?.isPositive ? "text-secondary" : "text-destructive";
+      case "accent":
+        return trend?.isPositive ? "text-accent" : "text-destructive";
+      case "muted":
+        return trend?.isPositive ? "text-muted-foreground" : "text-destructive";
+      case "primary":
       default:
-        return trend?.isPositive ? "text-blue-600" : "text-rose-600";
+        return trend?.isPositive ? "text-primary" : "text-destructive";
     }
   };
 
   return (
-    <Card className={`${getVariantStyles()} shadow-sm hover:shadow-md transition-shadow border`}>
+    <Card className={`${getVariantStyles()} shadow-sm hover:shadow-md transition-shadow`}>
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1 sm:space-y-2">
