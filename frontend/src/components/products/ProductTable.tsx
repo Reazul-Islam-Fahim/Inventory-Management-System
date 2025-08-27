@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
-import { Product } from "@/types";
+import { Product, Meta } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { productApi } from "@/services/api";
-import { Meta } from "@/types";
 
 interface ProductTableProps {
   products: Product[];
   onEdit?: (product: Product) => void;
+  refreshSignal?: number;
 }
 
-export const ProductTable = ({ onEdit }: ProductTableProps) => {
+export const ProductTable = ({ onEdit, refreshSignal = 0 }: ProductTableProps) => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [productData, setProductData] = useState<{ data: Product[]; meta?: Meta }>({
@@ -25,7 +25,6 @@ export const ProductTable = ({ onEdit }: ProductTableProps) => {
     try {
       setLoading(true);
       const res = await productApi.getAll({ page, limit });
-      // API returns { data: Product[], meta: Meta }
       if (res && Array.isArray(res.data)) {
         setProductData({ data: res.data, meta: res.meta });
       } else {
@@ -41,7 +40,7 @@ export const ProductTable = ({ onEdit }: ProductTableProps) => {
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+  }, [fetchProducts, refreshSignal]); // Add refreshSignal as dependency
 
   const productList = productData.data || [];
   const meta = productData.meta;

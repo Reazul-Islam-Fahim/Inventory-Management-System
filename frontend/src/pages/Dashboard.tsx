@@ -55,6 +55,13 @@ export default function Dashboard() {
     };
   }, [productsData, inventoryData, productsLoading, inventoryLoading, productsError, inventoryError]);
 
+  // Refresh both tables
+  const refreshAllData = () => {
+    refetchProducts();
+    refetchInventory();
+    setRefreshSignal(prev => prev + 1);
+  };
+
   // Handle product submit
   const handleProductSubmit = async (data: ProductCreate) => {
     try {
@@ -66,7 +73,7 @@ export default function Dashboard() {
         toast({ title: "Success", description: "Product created successfully" });
       }
       setProductFormState({ show: false, product: null });
-      refetchProducts(); // refresh products after CRUD
+      refreshAllData();
     } catch {
       toast({ title: "Error", description: "Failed to save product", variant: "destructive" });
     }
@@ -83,10 +90,7 @@ export default function Dashboard() {
         toast({ title: "Success", description: "Inventory created successfully" });
       }
       setInventoryFormState({ show: false, inventory: null });
-
-      // Refresh both inventory and products after CRUD
-      refetchInventory();
-      refetchProducts();
+      refreshAllData();
     } catch {
       toast({ title: "Error", description: "Failed to save inventory", variant: "destructive" });
     }
@@ -97,10 +101,7 @@ export default function Dashboard() {
     try {
       await deleteInventory.mutateAsync(item.id);
       toast({ title: "Success", description: "Inventory deleted successfully" });
-
-      // Refresh both inventory and products after deletion
-      refetchInventory();
-      refetchProducts();
+      refreshAllData();
     } catch {
       toast({ title: "Error", description: "Failed to delete inventory", variant: "destructive" });
     }
@@ -134,7 +135,11 @@ export default function Dashboard() {
           ) : productsError ? (
             <div className="py-8 text-center text-red-500">Error loading products: {productsError.message}</div>
           ) : (
-            <ProductTable products={productsArray} onEdit={(p) => setProductFormState({ show: true, product: p })} />
+            <ProductTable 
+              products={productsArray} 
+              onEdit={(p) => setProductFormState({ show: true, product: p })}
+              refreshSignal={refreshSignal}
+            />
           )}
         </div>
 
@@ -150,8 +155,8 @@ export default function Dashboard() {
             <div className="py-8 text-center text-red-500">Error loading inventory: {inventoryError.message}</div>
           ) : (
             <InventoryTable
-              inventory={Array.isArray(inventoryData?.data?.data) ? inventoryData.data.data : []}
-              products={Array.isArray(productsData?.data?.data) ? productsData.data.data : []}
+              inventory={inventoryArray}
+              products={productsArray}
               onEdit={(item) => setInventoryFormState({ show: true, inventory: item })}
               onDelete={handleDeleteInventory}
               refreshSignal={refreshSignal}

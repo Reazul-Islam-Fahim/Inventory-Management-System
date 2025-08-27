@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Inventory, Product } from "@/types";
+import { Inventory, Product, Meta } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { inventoryApi, productApi } from "@/services/api";
-import { Meta } from "@/types";
 
 interface InventoryTableProps {
   inventory: Inventory[];
@@ -14,8 +13,12 @@ interface InventoryTableProps {
   refreshSignal?: number;
 }
 
-
-export const InventoryTable = ({ onEdit, onDelete }: InventoryTableProps) => {
+export const InventoryTable = ({ 
+  products,
+  onEdit, 
+  onDelete, 
+  refreshSignal = 0 
+}: InventoryTableProps) => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [inventoryData, setInventoryData] = useState<{ data: Inventory[]; meta?: Meta }>({
@@ -29,7 +32,6 @@ export const InventoryTable = ({ onEdit, onDelete }: InventoryTableProps) => {
     try {
       setLoading(true);
       const res = await inventoryApi.getAll({ page, limit });
-      // API returns { data: Inventory[], meta: Meta }
       if (res && Array.isArray(res.data)) {
         setInventoryData({ data: res.data, meta: res.meta });
       } else {
@@ -45,26 +47,10 @@ export const InventoryTable = ({ onEdit, onDelete }: InventoryTableProps) => {
 
   useEffect(() => {
     fetchInventory();
-  }, [fetchInventory]);
+  }, [fetchInventory, refreshSignal]); // Add refreshSignal as dependency
 
   const inventoryList = inventoryData.data || [];
   const meta = inventoryData.meta;
-
-  // Fetch products separately (assuming you need this for product names)
-  const [products, setProducts] = useState<Product[]>([]);
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await productApi.getAll({ page: 1, limit: 1000 });
-        if (res && Array.isArray(res.data)) {
-          setProducts(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch products", err);
-      }
-    };
-    fetchProducts();
-  }, []);
 
   // Create product map for quick lookup
   const productMap = useMemo(() => {
